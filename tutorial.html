@@ -31,6 +31,7 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: bold;
+            margin-left: 10px;
         }
         nav a:hover {
             text-decoration: underline;
@@ -47,11 +48,6 @@
         nav button:hover {
             background-color: #e6b800;
         }
-        nav button:disabled {
-            background-color: #666666;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
         nav .nav-left {
             display: flex;
             align-items: center;
@@ -67,38 +63,49 @@
             align-items: center;
             gap: 10px;
         }
-        h1 {
-            text-align: center;
+        nav .nav-right .username {
             color: #ffcc00;
-            margin-top: 80px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
         }
-        .tutorial-container {
+        .content {
+            margin-top: 80px;
             max-width: 800px;
-            margin: 20px auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1 {
+            color: #ffcc00;
+            text-align: center;
+        }
+        .tutorial-content {
             background-color: #1a1a1a;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(255, 204, 0, 0.2);
+            margin-top: 20px;
         }
-        .tutorial-container h2 {
+        .tutorial-content h2 {
             color: #ffcc00;
+            margin-top: 0;
         }
-        .tutorial-container p {
+        .tutorial-content p {
             line-height: 1.6;
-            font-size: 16px;
+            margin: 10px 0;
         }
-        .tutorial-container a {
-            color: #ffcc00;
+        .tutorial-content a.lets-go {
+            color: #0000EE;
             text-decoration: none;
             font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            margin-top: 10px;
         }
-        .tutorial-container a:hover {
+        .tutorial-content a.lets-go:hover {
             text-decoration: underline;
         }
-        .no-tutorial {
-            text-align: center;
-            color: #ffcc00;
-            font-size: 18px;
+        .tutorial-content a.lets-go:visited {
+            color: #800080;
         }
     </style>
 </head>
@@ -111,53 +118,70 @@
             <a href="./index.html">LIQUIDITY FARM</a>
         </div>
         <div class="nav-right">
-            <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+            <a href="./upload.html" id="loginLink">Login</a>
+            <span class="username" id="username"></span>
+            <a href="#" id="logoutLink" onclick="logoutAdmin()" style="display: none;">Logout</a>
         </div>
     </nav>
-    <h1>Tutorial</h1>
-    <div class="tutorial-container" id="tutorialContainer"></div>
+    <div class="content">
+        <h1>Tutorial</h1>
+        <div class="tutorial-content" id="tutorialContent">
+            <p>No tutorial available for this project.</p>
+        </div>
+    </div>
 
     <script>
-        // Enable Forward button if Back was used
-        if (sessionStorage.getItem('hasGoneBack') === 'true') {
-            document.getElementById('moveButton').disabled = false;
-        }
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
 
-        // Function to go back to previous page
+        updateAuthLinks();
+
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
-            document.getElementById('moveButton').disabled = false;
             window.history.back();
         }
 
-        // Function to go forward to next page
-        function goForward() {
-            window.history.forward();
+        function updateAuthLinks() {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            const username = localStorage.getItem('username') || '';
+            document.getElementById('loginLink').style.display = isLoggedIn ? 'none' : 'inline';
+            document.getElementById('logoutLink').style.display = isLoggedIn ? 'inline' : 'none';
+            document.getElementById('username').textContent = isLoggedIn ? username : '';
         }
 
-        // Load tutorial content
-        function loadTutorial() {
+        function logoutAdmin() {
+            localStorage.removeItem('adminLoggedIn');
+            localStorage.removeItem('username');
+            updateAuthLinks();
+            window.location.href = './upload.html';
+        }
+
+        function displayTutorial() {
             const params = new URLSearchParams(window.location.search);
             const projectTitle = params.get('title');
-            const tutorialContainer = document.getElementById('tutorialContainer');
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
-
+            const tutorialContent = document.getElementById('tutorialContent');
             const project = projects.find(p => p.title === projectTitle);
 
-            if (project && project.tutorial && project.tutorial.content) {
-                const tutorial = project.tutorial;
-                tutorialContainer.innerHTML = `
-                    <h2>${tutorial.name || 'Tutorial'}</h2>
-                    ${tutorial.link ? `<p><a href="${tutorial.link}" target="_blank">${tutorial.link}</a></p>` : ''}
-                    <p>${tutorial.content.replace(/\n/g, '<br>')}</p>
-                `;
+            if (project && project.tutorial && (project.tutorial.name || project.tutorial.link || project.tutorial.content)) {
+                let html = '';
+                if (project.tutorial.name) {
+                    html += `<h2>${project.tutorial.name}</h2>`;
+                } else {
+                    html += `<h2>Tutorial</h2>`;
+                }
+                if (project.tutorial.content) {
+                    html += `<p>${project.tutorial.content.replace(/\n/g, '<br>')}</p>`;
+                }
+                if (project.tutorial.link) {
+                    html += `<a href="${project.tutorial.link}" class="lets-go" target="_blank">Lets Go</a>`;
+                }
+                tutorialContent.innerHTML = html;
             } else {
-                tutorialContainer.innerHTML = `<p class="no-tutorial">No tutorial available for this project.</p>`;
+                tutorialContent.innerHTML = `<p>No tutorial available for this project.</p>`;
             }
+            console.log('Displayed tutorial for:', projectTitle, project?.tutorial); // Debug
         }
 
-        // Load tutorial on page load
-        loadTutorial();
+        displayTutorial();
     </script>
 </body>
 </html>

@@ -38,10 +38,11 @@
         nav button:hover {
             background-color: #e6b800;
         }
-        nav button:disabled {
-            background-color: #666666;
-            cursor: not-allowed;
-            opacity: 0.5;
+        nav .nav-right .username {
+            color: #ffcc00;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
         }
         h1 {
             text-align: center;
@@ -128,7 +129,7 @@
 <body>
     <nav>
         <button id="backButton" onclick="goBack()">Back</button>
-        <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+        <span class="username" id="username"></span>
     </nav>
     <h1 id="toolsTitle"></h1>
     <div class="tools-content" id="toolsContent">
@@ -139,21 +140,10 @@
     </div>
 
     <script>
-        // Enable Forward button if Back was used
-        if (sessionStorage.getItem('hasGoneBack') === 'true') {
-            document.getElementById('moveButton').disabled = false;
-        }
-
         // Function to go back to previous page
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
-            document.getElementById('moveButton').disabled = false;
             window.history.back();
-        }
-
-        // Function to go forward to next page
-        function goForward() {
-            window.history.forward();
         }
 
         // Function to escape HTML characters
@@ -178,7 +168,7 @@
                 }).catch((err) => {
                     console.error('Failed to copy code:', err);
                     alert('Failed to copy code.');
-                });
+                         });
             } else {
                 console.error('Element not found or not a <code> element:', elementId);
                 alert('Failed to copy code: Element not found.');
@@ -266,6 +256,15 @@
                 toolsContent.innerHTML = `<p>Tools not available for this project.</p>`;
             }
         }
+
+        // Display username
+        function updateUsername() {
+            const username = localStorage.getItem('username') || '';
+            document.getElementById('username').textContent = username;
+        }
+
+        // Load username on page load
+        updateUsername();
     </script>
 </body>
 </html>

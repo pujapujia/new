@@ -62,11 +62,6 @@
         nav button:hover {
             background-color: #e6b800;
         }
-        nav button:disabled {
-            background-color: #666666;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
         nav .nav-right {
             display: flex;
             align-items: center;
@@ -81,6 +76,12 @@
         }
         nav .nav-right a:hover {
             text-decoration: underline;
+        }
+        nav .nav-right .username {
+            color: #ffcc00;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
         }
         nav .nav-center {
             flex-grow: 1;
@@ -140,6 +141,11 @@
             padding: 8px 10px;
             background-color: rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid #ffcc00;
+        }
+        .uploader-name {
+            color: #ffcc00; /* Changed to yellow */
+            font-size: 12px;
+            font-weight: normal;
         }
         .days-label {
             color: #ffffff;
@@ -298,8 +304,8 @@
         </div>
         <div class="nav-right">
             <button onclick="window.location.href='./upload.html'">Upload</button>
-            <button id="moveButton" onclick="goForward()" disabled>Forward</button>
             <a href="./upload.html" id="loginLink">Login</a>
+            <span class="username" id="username"></span>
         </div>
         <div class="nav-line"></div>
     </nav>
@@ -336,30 +342,21 @@
         let projects = JSON.parse(localStorage.getItem('projects')) || [];
         const isAdmin = localStorage.getItem('adminLoggedIn') === 'true';
 
-        // Enable Forward button if Back was used
-        if (sessionStorage.getItem('hasGoneBack') === 'true') {
-            document.getElementById('moveButton').disabled = false;
-        }
-
-        // Update login link visibility
+        // Update login link visibility and display username
         updateAuthLinks();
 
         // Function to go back to previous page
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
-            document.getElementById('moveButton').disabled = false;
             window.history.back();
         }
 
-        // Function to go forward to next page
-        function goForward() {
-            window.history.forward();
-        }
-
-        // Function to update login link visibility
+        // Function to update login link visibility and username
         function updateAuthLinks() {
             const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            const username = localStorage.getItem('username') || '';
             document.getElementById('loginLink').style.display = isLoggedIn ? 'none' : 'inline';
+            document.getElementById('username').textContent = isLoggedIn ? username : '';
         }
 
         // Function to calculate days since upload
@@ -428,6 +425,7 @@
                     const linkPage = project.type === 'Tools' ? 'tools.html' : 'tutorial.html';
                     projectCard.innerHTML = `
                         <div class="card-header">
+                            <span class="uploader-name">${project.uploader || 'Unknown'}</span>
                             <span class="days-label">${daysSinceUpload} days</span>
                             <span class="category-label">${project.type}</span>
                         </div>
