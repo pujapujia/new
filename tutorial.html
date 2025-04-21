@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial Proyek - LIQUIDITY FARM</title>
+    <title>Project Tutorial - LIQUIDITY FARM</title>
     <style>
         body {
             background-color: #000000;
@@ -74,35 +74,35 @@
 <body>
     <nav>
         <button id="backButton" onclick="goBack()">Back</button>
-        <button id="moveButton" onclick="goForward()" disabled>Move</button>
+        <button id="moveButton" onclick="goForward()" disabled>Forward</button>
     </nav>
     <h1 id="tutorialTitle">Tutorial - LIQUIDITY FARM</h1>
     <div class="tutorial-content">
-        <p id="tutorialContent">Isi tutorial untuk proyek ini akan ditampilkan di sini.</p>
+        <p id="tutorialContent">The tutorial content for this project will be displayed here.</p>
     </div>
     <div class="back-link">
-        <a href="./index.html">Kembali ke LIQUIDITY FARM</a>
+        <a href="./index.html">Back to LIQUIDITY FARM</a>
     </div>
 
     <script>
-        // Aktifkan tombol Move jika sudah pernah Back
+        // Enable Forward button if Back was used
         if (sessionStorage.getItem('hasGoneBack') === 'true') {
             document.getElementById('moveButton').disabled = false;
         }
 
-        // Fungsi untuk kembali ke halaman sebelumnya
+        // Function to go back to previous page
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
             document.getElementById('moveButton').disabled = false;
             window.history.back();
         }
 
-        // Fungsi untuk maju ke halaman berikutnya
+        // Function to go forward to next page
         function goForward() {
             window.history.forward();
         }
 
-        // Ambil judul dari URL
+        // Get title from URL
         const params = new URLSearchParams(window.location.search);
         const title = params.get('title');
         if (title) {
@@ -112,7 +112,7 @@
             if (project && project.tutorial) {
                 document.getElementById('tutorialContent').textContent = project.tutorial;
             } else {
-                document.getElementById('tutorialContent').textContent = 'Tutorial belum tersedia untuk proyek ini.';
+                document.getElementById('tutorialContent').textContent = 'Tutorial not available for this project.';
             }
         }
     </script>

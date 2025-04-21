@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +17,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            max-width: 100vw; /* Batasi lebar agar tidak overflow */
+            max-width: 100vw;
             background-color: #1a1a1a;
             padding: 10px 20px;
             display: flex;
@@ -57,6 +57,23 @@
         }
         nav .nav-right a:hover {
             text-decoration: underline;
+        }
+        nav .nav-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+        nav .nav-center input {
+            padding: 8px;
+            width: 200px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        nav .nav-center input::placeholder {
+            color: #cccccc;
         }
         h1 {
             text-align: center;
@@ -161,91 +178,99 @@
 <body>
     <nav>
         <button id="backButton" onclick="goBack()">Back</button>
+        <div class="nav-center">
+            <input type="text" id="searchInput" placeholder="Search projects..." oninput="filterProjects()">
+        </div>
         <div class="nav-right">
-            <button id="moveButton" onclick="goForward()" disabled>Move</button>
+            <button id="moveButton" onclick="goForward()" disabled>Forward</button>
             <a href="./upload.html">Login</a>
         </div>
     </nav>
     <h1>LIQUIDITY FARM</h1>
 
-    <!-- Filter Kategori dan Status -->
+    <!-- Category and Status Filter -->
     <div class="filter-section">
         <select id="categoryFilter" onchange="filterProjects()">
-            <option value="all">Semua Kategori</option>
+            <option value="all">All Categories</option>
             <option value="Retro">Retro</option>
             <option value="Testnet">Testnet</option>
             <option value="Garapan">Garapan</option>
+            <option value="Tools">Tools</option>
         </select>
         <select id="statusFilter" onchange="filterProjects()">
-            <option value="all">Semua Status</option>
-            <option value="ongoing">Berjalan</option>
-            <option value="ended">Selesai</option>
+            <option value="all">All Statuses</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="ended">Ended</option>
         </select>
     </div>
 
-    <!-- Kontainer Proyek -->
+    <!-- Project Container -->
     <div class="project-container" id="projectContainer">
-        <!-- Proyek akan ditambahkan secara dinamis -->
+        <!-- Projects will be added dynamically -->
     </div>
 
     <script>
         let projects = JSON.parse(localStorage.getItem('projects')) || [];
         const isAdmin = localStorage.getItem('adminLoggedIn') === 'true';
 
-        // Aktifkan tombol Move jika sudah pernah Back
+        // Enable Forward button if Back was used
         if (sessionStorage.getItem('hasGoneBack') === 'true') {
             document.getElementById('moveButton').disabled = false;
         }
 
-        // Fungsi untuk kembali ke halaman sebelumnya
+        // Function to go back to previous page
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
             document.getElementById('moveButton').disabled = false;
             window.history.back();
         }
 
-        // Fungsi untuk maju ke halaman berikutnya
+        // Function to go forward to next page
         function goForward() {
             window.history.forward();
         }
 
-        // Fungsi untuk menghitung nomor berdasarkan selisih hari
+        // Function to calculate days since upload
         function calculateDaysSinceUpload(uploadDate) {
             const upload = new Date(uploadDate);
             const today = new Date();
-            const diffTime = today - upload;
-            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffTime = Math.abs(today - upload);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
         }
 
-        // Fungsi untuk memfilter dan menampilkan proyek
+        // Function to filter and display projects
         function filterProjects() {
             const categoryFilter = document.getElementById('categoryFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
             const projectContainer = document.getElementById('projectContainer');
             projectContainer.innerHTML = '';
 
             projects.forEach((project, index) => {
                 const categoryMatch = categoryFilter === 'all' || project.type === categoryFilter;
                 const statusMatch = statusFilter === 'all' || 
-                    (statusFilter === 'ongoing' && project.status === 'Berjalan') ||
-                    (statusFilter === 'ended' && project.status === 'Selesai');
+                    (statusFilter === 'ongoing' && project.status === 'Ongoing') ||
+                    (statusFilter === 'ended' && project.status === 'Ended');
+                const searchMatch = project.title.toLowerCase().includes(searchQuery);
 
-                if (categoryMatch && statusMatch) {
+                if (categoryMatch && statusMatch && searchMatch) {
                     const projectCard = document.createElement('div');
                     projectCard.className = 'project-card';
                     const imageSrc = project.photoURL && project.photoURL.startsWith('data:image/') 
                         ? project.photoURL 
                         : '';
                     const daysSinceUpload = calculateDaysSinceUpload(project.uploadDate);
+                    const linkPage = project.type === 'Tools' ? 'tools.html' : 'tutorial.html';
                     projectCard.innerHTML = `
                         <div class="project-image">
-                            ${imageSrc ? `<img src="${imageSrc}" alt="${project.title}">` : `<p class="fallback-text">Gambar tidak tersedia</p>`}
+                            ${imageSrc ? `<img src="${imageSrc}" alt="${project.title}">` : `<p class="fallback-text">Image not available</p>`}
                         </div>
                         <div class="project-content">
                             <h3>${project.title}</h3>
-                            <p><strong>Tipe:</strong> ${project.type}</p>
-                            <p>${daysSinceUpload}</p>
-                            <a href="./tutorial.html?title=${encodeURIComponent(project.title)}">Tutorial</a>
+                            <p>${project.type}</p>
+                            <p>${daysSinceUpload} days</p>
+                            <a href="./${linkPage}?title=${encodeURIComponent(project.title)}">${project.type === 'Tools' ? 'Tools' : 'Tutorial'}</a>
                             <p class="start-end-label">${project.start} | ${project.end}</p>
                             ${isAdmin ? `<button class="edit-button" onclick="editProject(${index})">Edit</button>` : ''}
                         </div>
@@ -255,12 +280,12 @@
             });
         }
 
-        // Fungsi untuk edit proyek
+        // Function to edit project
         function editProject(index) {
             window.location.href = `./upload.html?edit=${index}`;
         }
 
-        // Tampilkan proyek saat halaman dimuat
+        // Display projects on page load
         filterProjects();
     </script>
 </body>

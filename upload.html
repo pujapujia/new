@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload/Edit Proyek - LIQUIDITY FARM</title>
+    <title>Upload/Edit Project - LIQUIDITY FARM</title>
     <style>
         body {
             background-color: #000000;
@@ -121,13 +121,22 @@
         }
         .modal-content textarea {
             width: 100%;
-            height: 300px;
+            height: 200px;
             background-color: #333333;
             color: #ffffff;
             border: none;
             border-radius: 5px;
             padding: 10px;
             font-family: Arial, sans-serif;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333333;
+            color: #ffffff;
         }
         .modal-content button {
             background-color: #ffcc00;
@@ -192,111 +201,214 @@
         .project-list button.delete:hover {
             background-color: #cc0000;
         }
+        #toolsFields {
+            display: none;
+        }
+        .code-entry {
+            margin: 10px 0;
+            border: 1px solid #333333;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .code-entry button.remove {
+            background-color: #ff3333;
+            margin-top: 5px;
+        }
+        .code-entry button.remove:hover {
+            background-color: #cc0000;
+        }
     </style>
 </head>
 <body>
     <nav>
         <button id="backButton" onclick="goBack()">Back</button>
-        <button id="moveButton" onclick="goForward()" disabled>Move</button>
+        <button id="moveButton" onclick="goForward()" disabled>Forward</button>
     </nav>
-    <h1 id="pageTitle">Upload Proyek - LIQUIDITY FARM</h1>
+    <h1 id="pageTitle">Upload Project - LIQUIDITY FARM</h1>
 
-    <!-- Login Admin -->
+    <!-- Admin Login -->
     <div class="login-section" id="loginSection">
-        <input type="password" id="adminPassword" placeholder="Masukkan kata sandi admin">
-        <button onclick="loginAdmin()">Login Admin</button>
+        <input type="password" id="adminPassword" placeholder="Enter admin password">
+        <button onclick="loginAdmin()">Login</button>
     </div>
 
-    <!-- Form Upload/Edit Admin -->
+    <!-- Admin Upload/Edit Form -->
     <div class="admin-section" id="adminSection" style="display: none;">
-        <h2 id="formTitle">Upload Proyek Baru</h2>
+        <h2 id="formTitle">Upload New Project</h2>
         <input type="file" id="projectPhoto" accept="image/*">
-        <input type="text" id="projectTitle" placeholder="Judul Proyek">
-        <select id="projectType">
+        <input type="text" id="projectTitle" placeholder="Project Title">
+        <select id="projectType" onchange="toggleFields()">
             <option value="Retro">Retro</option>
             <option value="Testnet">Testnet</option>
             <option value="Garapan">Garapan</option>
+            <option value="Tools">Tools</option>
         </select>
-        <input type="text" id="projectStart" placeholder="Start (Nomor)">
-        <input type="text" id="projectEnd" placeholder="End (Simbol)">
+        <input type="text" id="projectStart" placeholder="Start (Number)">
+        <input type="text" id="projectEnd" placeholder="End (Symbol)">
         <select id="projectStatus">
-            <option value="Berjalan">Berjalan</option>
-            <option value="Selesai">Selesai</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Ended">Ended</option>
         </select>
-        <button onclick="openTutorialModal()">Tulis Tutorial</button>
-        <button id="submitButton" onclick="submitProject()">Upload Proyek</button>
+        <button id="tutorialButton" onclick="openTutorialModal()">Write Tutorial</button>
+        <div id="toolsFields">
+            <div id="codeEntries"></div>
+            <button onclick="addCodeEntry()">Add Code</button>
+        </div>
+        <button id="submitButton" onclick="submitProject()">Upload Project</button>
     </div>
 
-    <!-- Daftar Proyek -->
+    <!-- Project List -->
     <div class="project-list" id="projectList" style="display: none;">
-        <h2>Daftar Proyek</h2>
+        <h2>Project List</h2>
         <ul id="projectListItems"></ul>
     </div>
 
-    <!-- Pop-up Modal untuk Tutorial -->
+    <!-- Tutorial Modal -->
     <div id="tutorialModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeTutorialModal()">×</span>
-            <h2>Tulis Tutorial</h2>
-            <textarea id="modalTutorial" placeholder="Tulis tutorial di sini..."></textarea>
-            <button onclick="saveTutorial()">Simpan</button>
-            <button onclick="closeTutorialModal()">Batal</button>
+            <h2>Write Tutorial</h2>
+            <textarea id="modalTutorial" placeholder="Write tutorial here..."></textarea>
+            <button onclick="saveTutorial()">Save</button>
+            <button onclick="closeTutorialModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Code Modal -->
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeCodeModal()">×</span>
+            <h2>Write Code</h2>
+            <input type="text" id="modalCodeName" placeholder="Code Name (e.g., Main HTML)">
+            <select id="modalCodeType">
+                <option value="HTML">HTML</option>
+                <option value="JavaScript">JavaScript</option>
+                <option value="Java">Java</option>
+                <option value="Python">Python</option>
+                <option value="CSS">CSS</option>
+            </select>
+            <textarea id="modalCodeContent" placeholder="Write code here..."></textarea>
+            <button onclick="saveCode()">Save</button>
+            <button onclick="closeCodeModal()">Cancel</button>
         </div>
     </div>
 
     <div class="back-link">
-        <a href="./index.html">Kembali ke LIQUIDITY FARM</a>
+        <a href="./index.html">Back to LIQUIDITY FARM</a>
     </div>
 
     <script>
         let projects = JSON.parse(localStorage.getItem('projects')) || [];
         let editIndex = null;
         let tutorialContent = '';
+        let codes = [];
+        let currentCodeIndex = null;
 
-        // Aktifkan tombol Move jika sudah pernah Back
+        // Enable Forward button if Back was used
         if (sessionStorage.getItem('hasGoneBack') === 'true') {
             document.getElementById('moveButton').disabled = false;
         }
 
-        // Fungsi untuk kembali ke halaman sebelumnya
+        // Function to go back to previous page
         function goBack() {
             sessionStorage.setItem('hasGoneBack', 'true');
             document.getElementById('moveButton').disabled = false;
             window.history.back();
         }
 
-        // Fungsi untuk maju ke halaman berikutnya
+        // Function to go forward to next page
         function goForward() {
             window.history.forward();
         }
 
-        // Cek apakah sudah login
+        // Toggle fields based on project type
+        function toggleFields() {
+            const projectType = document.getElementById('projectType').value;
+            document.getElementById('tutorialButton').style.display = projectType === 'Tools' ? 'none' : 'block';
+            document.getElementById('toolsFields').style.display = projectType === 'Tools' ? 'block' : 'none';
+            if (projectType === 'Tools') {
+                renderCodeEntries();
+            } else {
+                document.getElementById('codeEntries').innerHTML = '';
+            }
+        }
+
+        // Render code entries
+        function renderCodeEntries() {
+            const codeEntries = document.getElementById('codeEntries');
+            codeEntries.innerHTML = '';
+            codes.forEach((code, index) => {
+                const entry = document.createElement('div');
+                entry.className = 'code-entry';
+                entry.innerHTML = `
+                    <p>Code ${index + 1}: ${code.name || 'Unnamed'} (${code.type})</p>
+                    <button onclick="editCodeEntry(${index})">Edit</button>
+                    <button class="remove" onclick="removeCodeEntry(${index})">Remove</button>
+                `;
+                codeEntries.appendChild(entry);
+            });
+        }
+
+        // Add new code entry
+        function addCodeEntry() {
+            codes.push({ name: '', content: '', type: 'HTML' });
+            renderCodeEntries();
+        }
+
+        // Edit code entry
+        function editCodeEntry(index) {
+            currentCodeIndex = index;
+            const modal = document.getElementById('codeModal');
+            const modalCodeName = document.getElementById('modalCodeName');
+            const modalCodeContent = document.getElementById('modalCodeContent');
+            const modalCodeType = document.getElementById('modalCodeType');
+            modalCodeName.value = codes[index].name;
+            modalCodeContent.value = codes[index].content;
+            modalCodeType.value = codes[index].type;
+            modal.style.display = 'block';
+        }
+
+        // Remove code entry
+        function removeCodeEntry(index) {
+            codes.splice(index, 1);
+            renderCodeEntries();
+        }
+
+        // Check if already logged in
         if (localStorage.getItem('adminLoggedIn') === 'true') {
             document.getElementById('adminSection').style.display = 'block';
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('projectList').style.display = 'block';
             displayProjectList();
+            toggleFields();
         }
 
-        // Cek apakah mode edit
+        // Check if in edit mode
         const params = new URLSearchParams(window.location.search);
         if (params.has('edit')) {
             editIndex = parseInt(params.get('edit'));
             if (editIndex >= 0 && editIndex < projects.length) {
                 const project = projects[editIndex];
-                document.getElementById('pageTitle').textContent = 'Edit Proyek - LIQUIDITY FARM';
-                document.getElementById('formTitle').textContent = 'Edit Proyek';
-                document.getElementById('submitButton').textContent = 'Simpan Perubahan';
+                document.getElementById('pageTitle').textContent = 'Edit Project - LIQUIDITY FARM';
+                document.getElementById('formTitle').textContent = 'Edit Project';
+                document.getElementById('submitButton').textContent = 'Save Changes';
                 document.getElementById('projectTitle').value = project.title;
                 document.getElementById('projectType').value = project.type;
                 document.getElementById('projectStart').value = project.start;
                 document.getElementById('projectEnd').value = project.end;
                 document.getElementById('projectStatus').value = project.status;
-                tutorialContent = project.tutorial || '';
+                if (project.type === 'Tools') {
+                    codes = project.codes || [];
+                    if (project.code1) codes.push({ name: 'Code 1', content: project.code1, type: project.code1Type || 'HTML' });
+                    if (project.code2) codes.push({ name: 'Code 2', content: project.code2, type: project.code2Type || 'HTML' });
+                } else {
+                    tutorialContent = project.tutorial || '';
+                }
+                toggleFields();
             }
         }
 
-        // Simulasi autentikasi admin (kata sandi: "admin123")
+        // Simulate admin authentication (password: "admin123")
         function loginAdmin() {
             const password = document.getElementById('adminPassword').value;
             if (password === 'admin123') {
@@ -305,12 +417,13 @@
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('projectList').style.display = 'block';
                 displayProjectList();
+                toggleFields();
             } else {
-                alert('Kata sandi salah!');
+                alert('Incorrect password!');
             }
         }
 
-        // Fungsi untuk menampilkan daftar proyek
+        // Function to display project list
         function displayProjectList() {
             const projectListItems = document.getElementById('projectListItems');
             projectListItems.innerHTML = '';
@@ -320,28 +433,28 @@
                     ${project.title}
                     <div>
                         <button onclick="editProject(${index})">Edit</button>
-                        <button class="delete" onclick="deleteProject(${index})">Hapus</button>
+                        <button class="delete" onclick="deleteProject(${index})">Delete</button>
                     </div>
                 `;
                 projectListItems.appendChild(li);
             });
         }
 
-        // Fungsi untuk edit proyek
+        // Function to edit project
         function editProject(index) {
             window.location.href = `./upload.html?edit=${index}`;
         }
 
-        // Fungsi untuk hapus proyek
+        // Function to delete project
         function deleteProject(index) {
-            if (confirm(`Yakin ingin menghapus proyek "${projects[index].title}"?`)) {
+            if (confirm(`Are you sure you want to delete the project "${projects[index].title}"?`)) {
                 projects.splice(index, 1);
                 localStorage.setItem('projects', JSON.stringify(projects));
                 displayProjectList();
             }
         }
 
-        // Fungsi untuk buka modal tutorial
+        // Tutorial Modal Functions
         function openTutorialModal() {
             const modal = document.getElementById('tutorialModal');
             const modalTutorial = document.getElementById('modalTutorial');
@@ -349,18 +462,52 @@
             modal.style.display = 'block';
         }
 
-        // Fungsi untuk tutup modal tutorial
         function closeTutorialModal() {
             document.getElementById('tutorialModal').style.display = 'none';
         }
 
-        // Fungsi untuk simpan tutorial dari modal
         function saveTutorial() {
             tutorialContent = document.getElementById('modalTutorial').value;
             closeTutorialModal();
         }
 
-        // Fungsi untuk mengunggah atau mengedit proyek
+        // Code Modal Functions
+        function openCodeModal() {
+            const modal = document.getElementById('codeModal');
+            const modalCodeName = document.getElementById('modalCodeName');
+            const modalCodeContent = document.getElementById('modalCodeContent');
+            const modalCodeType = document.getElementById('modalCodeType');
+            if (currentCodeIndex !== null) {
+                modalCodeName.value = codes[currentCodeIndex].name;
+                modalCodeContent.value = codes[currentCodeIndex].content;
+                modalCodeType.value = codes[currentCodeIndex].type;
+            } else {
+                modalCodeName.value = '';
+                modalCodeContent.value = '';
+                modalCodeType.value = 'HTML';
+            }
+            modal.style.display = 'block';
+        }
+
+        function closeCodeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+            currentCodeIndex = null;
+        }
+
+        function saveCode() {
+            const name = document.getElementById('modalCodeName').value;
+            const content = document.getElementById('modalCodeContent').value;
+            const type = document.getElementById('modalCodeType').value;
+            if (currentCodeIndex !== null) {
+                codes[currentCodeIndex] = { name, content, type };
+            } else {
+                codes.push({ name, content, type });
+            }
+            renderCodeEntries();
+            closeCodeModal();
+        }
+
+        // Function to upload or edit project
         function submitProject() {
             const photo = document.getElementById('projectPhoto').files[0];
             const title = document.getElementById('projectTitle').value;
@@ -370,7 +517,12 @@
             const status = document.getElementById('projectStatus').value;
 
             if (!title || !type || !start || !end || !status) {
-                alert('Lengkapi semua kolom wajib!');
+                alert('Please fill in all required fields!');
+                return;
+            }
+
+            if (type === 'Tools' && codes.length === 0) {
+                alert('Please add at least one code for Tools project!');
                 return;
             }
 
@@ -382,9 +534,14 @@
                     start,
                     end,
                     status,
-                    tutorial: tutorialContent,
                     uploadDate: new Date().toISOString()
                 };
+
+                if (type === 'Tools') {
+                    project.codes = codes;
+                } else {
+                    project.tutorial = tutorialContent;
+                }
 
                 if (editIndex !== null) {
                     projects[editIndex] = project;
@@ -400,14 +557,16 @@
                 document.getElementById('projectType').value = 'Retro';
                 document.getElementById('projectStart').value = '';
                 document.getElementById('projectEnd').value = '';
-                document.getElementById('projectStatus').value = 'Berjalan';
+                document.getElementById('projectStatus').value = 'Ongoing';
                 tutorialContent = '';
+                codes = [];
                 editIndex = null;
-                document.getElementById('pageTitle').textContent = 'Upload Proyek - LIQUIDITY FARM';
-                document.getElementById('formTitle').textContent = 'Upload Proyek Baru';
-                document.getElementById('submitButton').textContent = 'Upload Proyek';
+                document.getElementById('pageTitle').textContent = 'Upload Project - LIQUIDITY FARM';
+                document.getElementById('formTitle').textContent = 'Upload New Project';
+                document.getElementById('submitButton').textContent = 'Upload Project';
+                toggleFields();
 
-                alert(editIndex !== null ? 'Proyek berhasil diedit!' : 'Proyek berhasil diunggah!');
+                alert(editIndex !== null ? 'Project successfully edited!' : 'Project successfully uploaded!');
                 window.location.href = './index.html';
             };
 
@@ -417,7 +576,7 @@
                     saveProject(event.target.result);
                 };
                 reader.onerror = function() {
-                    alert('Gagal membaca gambar!');
+                    alert('Failed to read image!');
                 };
                 reader.readAsDataURL(photo);
             } else {
