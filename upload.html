@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload/Edit Project - LIQUIDITY FARM</title>
+    <title>Upload</title>
     <style>
         body {
             background-color: #000000;
@@ -26,6 +26,16 @@
             z-index: 1000;
             box-sizing: border-box;
         }
+        nav a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
         nav button {
             background-color: #ffcc00;
             color: #000000;
@@ -43,10 +53,25 @@
             cursor: not-allowed;
             opacity: 0.5;
         }
+        nav .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        nav .nav-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+        nav .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         h1 {
             text-align: center;
             color: #ffcc00;
-            margin-top: 60px;
+            margin-top: 80px;
         }
         .admin-section {
             margin: 20px auto;
@@ -66,6 +91,9 @@
             border-radius: 5px;
             background-color: #333333;
             color: #ffffff;
+        }
+        .admin-section input#projectTitle {
+            text-transform: uppercase;
         }
         .admin-section button {
             background-color: #ffcc00;
@@ -89,15 +117,6 @@
             background-color: #ffcc00;
             color: #000000;
             cursor: pointer;
-        }
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .back-link a {
-            color: #ffcc00;
-            text-decoration: none;
-            font-weight: bold;
         }
         .modal {
             display: none;
@@ -217,14 +236,42 @@
         .code-entry button.remove:hover {
             background-color: #cc0000;
         }
+        .upload-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .upload-photo {
+            flex: 1;
+        }
+        .upload-project-card {
+            background-color: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .upload-project-card button {
+            margin: 0;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <nav>
-        <button id="backButton" onclick="goBack()">Back</button>
-        <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+        <div class="nav-left">
+            <button id="backButton" onclick="goBack()">Back</button>
+        </div>
+        <div class="nav-center">
+            <a href="./index.html">LIQUIDITY FARM</a>
+        </div>
+        <div class="nav-right">
+            <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+            <a href="./upload.html" id="loginLink">Login</a>
+            <a href="#" id="logoutLink" onclick="logoutAdmin()" style="display: none;">Logout</a>
+        </div>
     </nav>
-    <h1 id="pageTitle">Upload Project - LIQUIDITY FARM</h1>
+    <h1 id="pageTitle">Upload</h1>
 
     <!-- Admin Login -->
     <div class="login-section" id="loginSection">
@@ -235,7 +282,14 @@
     <!-- Admin Upload/Edit Form -->
     <div class="admin-section" id="adminSection" style="display: none;">
         <h2 id="formTitle">Upload New Project</h2>
-        <input type="file" id="projectPhoto" accept="image/*">
+        <div class="upload-section">
+            <div class="upload-photo">
+                <input type="file" id="projectPhoto" accept="image/*">
+            </div>
+            <div class="upload-project-card">
+                <button id="submitButton" onclick="submitProject()">Upload Project</button>
+            </div>
+        </div>
         <input type="text" id="projectTitle" placeholder="Project Title">
         <select id="projectType" onchange="toggleFields()">
             <option value="Retro">Retro</option>
@@ -254,7 +308,6 @@
             <div id="codeEntries"></div>
             <button onclick="addCodeEntry()">Add Code</button>
         </div>
-        <button id="submitButton" onclick="submitProject()">Upload Project</button>
     </div>
 
     <!-- Project List -->
@@ -268,6 +321,8 @@
         <div class="modal-content">
             <span class="close-button" onclick="closeTutorialModal()">×</span>
             <h2>Write Tutorial</h2>
+            <input type="text" id="modalTutorialName" placeholder="Tutorial Name (e.g., Google)">
+            <input type="text" id="modalTutorialLink" placeholder="Tutorial Link (e.g., https://google.com)">
             <textarea id="modalTutorial" placeholder="Write tutorial here..."></textarea>
             <button onclick="saveTutorial()">Save</button>
             <button onclick="closeTutorialModal()">Cancel</button>
@@ -293,14 +348,10 @@
         </div>
     </div>
 
-    <div class="back-link">
-        <a href="./index.html">Back to LIQUIDITY FARM</a>
-    </div>
-
     <script>
         let projects = JSON.parse(localStorage.getItem('projects')) || [];
         let editIndex = null;
-        let tutorialContent = '';
+        let tutorialContent = { name: '', link: '', content: '' };
         let codes = [];
         let currentCodeIndex = null;
 
@@ -308,6 +359,9 @@
         if (sessionStorage.getItem('hasGoneBack') === 'true') {
             document.getElementById('moveButton').disabled = false;
         }
+
+        // Update login/logout link visibility
+        updateAuthLinks();
 
         // Function to go back to previous page
         function goBack() {
@@ -319,6 +373,22 @@
         // Function to go forward to next page
         function goForward() {
             window.history.forward();
+        }
+
+        // Function to update login/logout link visibility
+        function updateAuthLinks() {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            document.getElementById('loginLink').style.display = isLoggedIn ? 'none' : 'inline';
+            document.getElementById('logoutLink').style.display = isLoggedIn ? 'inline' : 'none';
+            document.getElementById('loginSection').style.display = isLoggedIn ? 'none' : 'block';
+        }
+
+        // Function to logout admin
+        function logoutAdmin() {
+            localStorage.removeItem('adminLoggedIn');
+            document.getElementById('adminSection').style.display = 'none';
+            document.getElementById('projectList').style.display = 'none';
+            updateAuthLinks();
         }
 
         // Toggle fields based on project type
@@ -377,7 +447,6 @@
         // Check if already logged in
         if (localStorage.getItem('adminLoggedIn') === 'true') {
             document.getElementById('adminSection').style.display = 'block';
-            document.getElementById('loginSection').style.display = 'none';
             document.getElementById('projectList').style.display = 'block';
             displayProjectList();
             toggleFields();
@@ -389,7 +458,7 @@
             editIndex = parseInt(params.get('edit'));
             if (editIndex >= 0 && editIndex < projects.length) {
                 const project = projects[editIndex];
-                document.getElementById('pageTitle').textContent = 'Edit Project - LIQUIDITY FARM';
+                document.getElementById('pageTitle').textContent = 'Edit';
                 document.getElementById('formTitle').textContent = 'Edit Project';
                 document.getElementById('submitButton').textContent = 'Save Changes';
                 document.getElementById('projectTitle').value = project.title;
@@ -402,7 +471,7 @@
                     if (project.code1) codes.push({ name: 'Code 1', content: project.code1, type: project.code1Type || 'HTML' });
                     if (project.code2) codes.push({ name: 'Code 2', content: project.code2, type: project.code2Type || 'HTML' });
                 } else {
-                    tutorialContent = project.tutorial || '';
+                    tutorialContent = project.tutorial || { name: '', link: '', content: '' };
                 }
                 toggleFields();
             }
@@ -411,13 +480,14 @@
         // Simulate admin authentication (password: "admin123")
         function loginAdmin() {
             const password = document.getElementById('adminPassword').value;
-            if (password === 'admin123') {
+            if (password === 'Liquidity') {
                 localStorage.setItem('adminLoggedIn', 'true');
                 document.getElementById('adminSection').style.display = 'block';
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('projectList').style.display = 'block';
                 displayProjectList();
                 toggleFields();
+                updateAuthLinks();
             } else {
                 alert('Incorrect password!');
             }
@@ -458,7 +528,11 @@
         function openTutorialModal() {
             const modal = document.getElementById('tutorialModal');
             const modalTutorial = document.getElementById('modalTutorial');
-            modalTutorial.value = tutorialContent;
+            const modalTutorialName = document.getElementById('modalTutorialName');
+            const modalTutorialLink = document.getElementById('modalTutorialLink');
+            modalTutorial.value = tutorialContent.content;
+            modalTutorialName.value = tutorialContent.name;
+            modalTutorialLink.value = tutorialContent.link;
             modal.style.display = 'block';
         }
 
@@ -467,7 +541,11 @@
         }
 
         function saveTutorial() {
-            tutorialContent = document.getElementById('modalTutorial').value;
+            tutorialContent = {
+                name: document.getElementById('modalTutorialName').value,
+                link: document.getElementById('modalTutorialLink').value,
+                content: document.getElementById('modalTutorial').value
+            };
             closeTutorialModal();
         }
 
@@ -510,16 +588,11 @@
         // Function to upload or edit project
         function submitProject() {
             const photo = document.getElementById('projectPhoto').files[0];
-            const title = document.getElementById('projectTitle').value;
-            const type = document.getElementById('projectType').value;
-            const start = document.getElementById('projectStart').value;
-            const end = document.getElementById('projectEnd').value;
-            const status = document.getElementById('projectStatus').value;
-
-            if (!title || !type || !start || !end || !status) {
-                alert('Please fill in all required fields!');
-                return;
-            }
+            let title = document.getElementById('projectTitle').value.toUpperCase();
+            const type = document.getElementById('projectType').value || 'Retro';
+            const start = document.getElementById('projectStart').value || 'N/A';
+            const end = document.getElementById('projectEnd').value || 'N/A';
+            const status = document.getElementById('projectStatus').value || 'Ongoing';
 
             if (type === 'Tools' && codes.length === 0) {
                 alert('Please add at least one code for Tools project!');
@@ -528,13 +601,14 @@
 
             const saveProject = (photoURL) => {
                 const project = {
-                    photoURL,
-                    title,
+                    photoURL: photoURL || '',
+                    title: title || 'Untitled',
                     type,
                     start,
                     end,
                     status,
-                    uploadDate: new Date().toISOString()
+                    uploadDate: new Date().toISOString(),
+                    pinned: editIndex !== null ? projects[editIndex].pinned || false : false
                 };
 
                 if (type === 'Tools') {
@@ -558,10 +632,10 @@
                 document.getElementById('projectStart').value = '';
                 document.getElementById('projectEnd').value = '';
                 document.getElementById('projectStatus').value = 'Ongoing';
-                tutorialContent = '';
+                tutorialContent = { name: '', link: '', content: '' };
                 codes = [];
                 editIndex = null;
-                document.getElementById('pageTitle').textContent = 'Upload Project - LIQUIDITY FARM';
+                document.getElementById('pageTitle').textContent = 'Upload';
                 document.getElementById('formTitle').textContent = 'Upload New Project';
                 document.getElementById('submitButton').textContent = 'Upload Project';
                 toggleFields();

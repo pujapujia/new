@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Tools - LIQUIDITY FARM</title>
+    <title>Tools</title>
     <style>
         body {
             background-color: #000000;
@@ -130,7 +130,7 @@
         <button id="backButton" onclick="goBack()">Back</button>
         <button id="moveButton" onclick="goForward()" disabled>Forward</button>
     </nav>
-    <h1 id="toolsTitle">Tools - LIQUIDITY FARM</h1>
+    <h1 id="toolsTitle"></h1>
     <div class="tools-content" id="toolsContent">
         <!-- Code blocks will be added dynamically -->
     </div>
@@ -163,7 +163,7 @@
                 '<': '&lt;',
                 '>': '&gt;',
                 '"': '&quot;',
-                "'": '&apos;'
+                "'": '&#039;'
             };
             return text.replace(/[&<>"']/g, m => map[m]);
         }
@@ -173,7 +173,6 @@
             const codeElement = document.getElementById(elementId);
             if (codeElement && codeElement.tagName.toLowerCase() === 'code') {
                 const codeContent = codeElement.innerText.trim();
-                console.log('Copying code:', codeContent); // Debug log
                 navigator.clipboard.writeText(codeContent).then(() => {
                     alert('Code copied to clipboard!');
                 }).catch((err) => {
@@ -190,7 +189,7 @@
         const params = new URLSearchParams(window.location.search);
         const title = params.get('title');
         if (title) {
-            document.getElementById('toolsTitle').textContent = `Tools: ${decodeURIComponent(title)} - LIQUIDITY FARM`;
+            document.getElementById('toolsTitle').textContent = decodeURIComponent(title);
             const projects = JSON.parse(localStorage.getItem('projects')) || [];
             const project = projects.find(p => p.title === decodeURIComponent(title));
             const toolsContent = document.getElementById('toolsContent');
@@ -213,9 +212,8 @@
                         `;
                         toolsContent.appendChild(codeBlock);
                     });
-                }
-                // Handle old structure (code1, code2)
-                else if (project.code1 || project.code2) {
+                } else if (project.code1 || project.code2) {
+                    // Handle old structure (code1, code2)
                     if (project.code1) {
                         const codeBlock = document.createElement('div');
                         codeBlock.className = 'code-block';
@@ -246,9 +244,8 @@
                         `;
                         toolsContent.appendChild(codeBlock);
                     }
-                }
-                // Handle older structure (tutorial)
-                else if (project.tutorial) {
+                } else if (project.tutorial) {
+                    // Handle older structure (tutorial)
                     const codeBlock = document.createElement('div');
                     codeBlock.className = 'code-block';
                     codeBlock.innerHTML = `
@@ -258,18 +255,17 @@
                         <button class="copy-button" onclick="copyCode('codeContentTutorial')">
                             <svg viewBox="0 0 24 24">
                                 <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/>
-                                </svg>
-                            </button>
-                        `;
-                        toolsContent.appendChild(codeBlock);
-                    }
+                            </svg>
+                        </button>
+                    `;
+                    toolsContent.appendChild(codeBlock);
                 } else {
                     toolsContent.innerHTML = `<p>Tools not available for this project.</p>`;
                 }
             } else {
                 toolsContent.innerHTML = `<p>Tools not available for this project.</p>`;
             }
-        
+        }
     </script>
 </body>
 </html>

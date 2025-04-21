@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Tutorial - LIQUIDITY FARM</title>
+    <title>Tutorial</title>
     <style>
         body {
             background-color: #000000;
@@ -26,6 +26,15 @@
             z-index: 1000;
             box-sizing: border-box;
         }
+        nav a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
         nav button {
             background-color: #ffcc00;
             color: #000000;
@@ -43,46 +52,70 @@
             cursor: not-allowed;
             opacity: 0.5;
         }
+        nav .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        nav .nav-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+        nav .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         h1 {
             text-align: center;
             color: #ffcc00;
-            margin-top: 60px;
+            margin-top: 80px;
         }
-        .tutorial-content {
+        .tutorial-container {
+            max-width: 800px;
+            margin: 20px auto;
             background-color: #1a1a1a;
             padding: 20px;
             border-radius: 10px;
-            margin: 20px auto;
-            max-width: 800px;
+            box-shadow: 0 4px 8px rgba(255, 204, 0, 0.2);
         }
-        .tutorial-content p {
-            font-size: 14px;
+        .tutorial-container h2 {
+            color: #ffcc00;
+        }
+        .tutorial-container p {
             line-height: 1.6;
-            white-space: pre-wrap;
+            font-size: 16px;
         }
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .back-link a {
+        .tutorial-container a {
             color: #ffcc00;
             text-decoration: none;
             font-weight: bold;
+        }
+        .tutorial-container a:hover {
+            text-decoration: underline;
+        }
+        .no-tutorial {
+            text-align: center;
+            color: #ffcc00;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
     <nav>
-        <button id="backButton" onclick="goBack()">Back</button>
-        <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+        <div class="nav-left">
+            <button id="backButton" onclick="goBack()">Back</button>
+        </div>
+        <div class="nav-center">
+            <a href="./index.html">LIQUIDITY FARM</a>
+        </div>
+        <div class="nav-right">
+            <button id="moveButton" onclick="goForward()" disabled>Forward</button>
+        </div>
     </nav>
-    <h1 id="tutorialTitle">Tutorial - LIQUIDITY FARM</h1>
-    <div class="tutorial-content">
-        <p id="tutorialContent">The tutorial content for this project will be displayed here.</p>
-    </div>
-    <div class="back-link">
-        <a href="./index.html">Back to LIQUIDITY FARM</a>
-    </div>
+    <h1>Tutorial</h1>
+    <div class="tutorial-container" id="tutorialContainer"></div>
 
     <script>
         // Enable Forward button if Back was used
@@ -102,19 +135,29 @@
             window.history.forward();
         }
 
-        // Get title from URL
-        const params = new URLSearchParams(window.location.search);
-        const title = params.get('title');
-        if (title) {
-            document.getElementById('tutorialTitle').textContent = `Tutorial: ${decodeURIComponent(title)} - LIQUIDITY FARM`;
+        // Load tutorial content
+        function loadTutorial() {
+            const params = new URLSearchParams(window.location.search);
+            const projectTitle = params.get('title');
+            const tutorialContainer = document.getElementById('tutorialContainer');
             const projects = JSON.parse(localStorage.getItem('projects')) || [];
-            const project = projects.find(p => p.title === decodeURIComponent(title));
-            if (project && project.tutorial) {
-                document.getElementById('tutorialContent').textContent = project.tutorial;
+
+            const project = projects.find(p => p.title === projectTitle);
+
+            if (project && project.tutorial && project.tutorial.content) {
+                const tutorial = project.tutorial;
+                tutorialContainer.innerHTML = `
+                    <h2>${tutorial.name || 'Tutorial'}</h2>
+                    ${tutorial.link ? `<p><a href="${tutorial.link}" target="_blank">${tutorial.link}</a></p>` : ''}
+                    <p>${tutorial.content.replace(/\n/g, '<br>')}</p>
+                `;
             } else {
-                document.getElementById('tutorialContent').textContent = 'Tutorial not available for this project.';
+                tutorialContainer.innerHTML = `<p class="no-tutorial">No tutorial available for this project.</p>`;
             }
         }
+
+        // Load tutorial on page load
+        loadTutorial();
     </script>
 </body>
 </html>
